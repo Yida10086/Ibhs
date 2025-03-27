@@ -1,0 +1,5 @@
+<!-- res/drawable/button_background.xml -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="@color/black" /> <!-- 设置背景颜色 -->
+    <corners android:radius="0dp" /> <!-- 取消圆角 -->
+</shape>

@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".Activitys.AddActivity">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:id="@+id/linearLayout"
+            android:layout_width="334dp"
+            android:layout_height="100sp">
+
+            <Button
+                android:id="@+id/btback"
+                android:layout_width="wrap_content"
+                android:layout_height="50sp"
+                android:layout_marginTop="30sp"
+                android:layout_weight="1"
+                android:background="@drawable/button"
+                android:text="返回" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="50sp"
+                android:layout_marginTop="35sp"
+                android:layout_weight="20"
+                android:gravity="center"
+                android:text="添加项目"
+                android:textSize="30sp" />
+
+
+        </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="424dp"
+        android:layout_height="600sp"
+        android:orientation="vertical"
+        >
+
+        <EditText
+            android:id="@+id/texttille"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="请输入标题"
+            android:inputType="text"
+            android:maxLength="20"
+            android:textColor="@color/black"
+            android:textSize="17sp" />
+
+        <EditText
+            android:id="@+id/textcontent"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:gravity="top|start"
+            android:hint="请输入内容"
+            android:inputType="textMultiLine"
+            android:maxLength="100"
+            android:minLines="3"
+            android:textColor="@color/black"
+            android:textSize="17sp" />
+
+        <TextView
+            android:id="@+id/datetext"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:hint="日期" />
+
+        <Button
+            android:id="@+id/select_date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="选择日期"
+            android:background="@drawable/button"/>
+
+        <Button
+            android:id="@+id/sbumitBt"
+            android:layout_width="200sp"
+            android:layout_height="50sp"
+            android:text="提交"
+            android:background="@drawable/button"/>
+
+    </LinearLayout>
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
