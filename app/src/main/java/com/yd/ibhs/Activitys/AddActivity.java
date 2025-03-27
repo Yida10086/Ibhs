@@ -41,6 +41,7 @@ public class AddActivity extends AppCompatActivity {
         String defaultDate = formatter.format(currentDate);
         TextView dateText = findViewById(R.id.datetext);
         dateText.setText(defaultDate);
+        Log.d("AddActivity", "初始化默认日期: " + defaultDate);
         
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
@@ -101,7 +102,9 @@ public class AddActivity extends AppCompatActivity {
                         // 在这里处理选择的日期
                         TextView tv = findViewById(R.id.datetext);
                         tv.setText(selectedDate);
-                        Log.d("SelectedDate", selectedDate);
+                        // 增加视觉反馈
+                        tv.setTextColor(getResources().getColor(android.R.color.holo_blue_dark));
+                        Log.d("AddActivity", "用户选择的日期: " + selectedDate);
 
                         // 关闭对话框
                         datePickerDialog.dismiss();
@@ -131,7 +134,7 @@ public class AddActivity extends AppCompatActivity {
                 String date = d.getText() != null ? d.getText().toString().trim() : "";
                 
                 // 如果日期为空，则使用当前日期
-                if (date == "") {
+                if (date.isEmpty()) {
                     SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
                     Date currentDate = new Date(System.currentTimeMillis());
                     date = formatter.format(currentDate);

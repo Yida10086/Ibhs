@@ -67,7 +67,12 @@
             android:id="@+id/datetext"
             android:layout_width="match_parent"
             android:layout_height="50dp"
-            android:hint="日期" />
+            android:hint="日期 (默认今天)"
+            android:textSize="17sp"
+            android:gravity="center_vertical"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="10dp"
+            android:textColor="@android:color/black" />
 
         <Button
             android:id="@+id/select_date"
