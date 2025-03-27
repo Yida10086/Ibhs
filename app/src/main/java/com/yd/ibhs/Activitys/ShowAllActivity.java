@@ -111,14 +111,32 @@ public class ShowAllActivity extends AppCompatActivity implements ItemAdapter.Re
 
     @Override
     public void refreshData() {
-        try {
-            // 刷新数据
-            allItemList = dbHelper.queryAllItemsNoDateFilter();
+        Log.d(TAG, "开始刷新所有项目数据...");
+        // 获取刷新前的项目数量
+        int oldItemCount = allItemList != null ? allItemList.size() : 0;
+        
+        // 重新查询所有项目（不受日期限制）
+        allItemList = dbHelper.queryAllItemsNoDateFilter();
+        
+        // 更新适配器数据
+        if (adapter != null) {
             adapter.updateList(allItemList);
-        } catch (Exception e) {
-            Log.e(TAG, "刷新数据时出错: " + e.getMessage());
-            Toast.makeText(this, "刷新数据失败", Toast.LENGTH_SHORT).show();
+        } else {
+            Log.w(TAG, "适配器为空，重新初始化");
+            adapter = new ItemAdapter(
+                this,        // Context
+                allItemList, // 数据列表
+                dbHelper,    // 数据库实例
+                this         // 实现RefreshCallback接口的Activity
+            );
+            if (listView != null) {
+                listView.setAdapter(adapter);
+            }
         }
+        
+        // 显示刷新结果
+        int newItemCount = allItemList != null ? allItemList.size() : 0;
+        Log.d(TAG, "所有项目数据刷新完成 - 刷新前: " + oldItemCount + " 项, 刷新后: " + newItemCount + " 项");
     }
     
     @Override

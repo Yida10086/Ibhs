@@ -292,157 +292,184 @@ public class items extends SQLiteOpenHelper {
     // 在items类中添加以下方法
     public List<Item> queryAllItems() {
         List<Item> itemList = new ArrayList<>();
-        SQLiteDatabase db = getReadableDatabase();
-
-        // 获取当前日期格式化为yyyy-MM-dd
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-        Calendar calendar = Calendar.getInstance();
-        String currentDate = sdf.format(calendar.getTime());
+        SQLiteDatabase db = null;
         
-        Log.d(TAG, "查询项目 - 当前日期: " + currentDate);
-
-        // 读取所有项目的SQL
-        String allItemsQuery = "SELECT * FROM " + TABLE_NAME;
-        Cursor debugCursor = db.rawQuery(allItemsQuery, null);
-        Log.d(TAG, "数据库中所有项目数量: " + debugCursor.getCount());
-        
-        // 输出数据库中的所有记录进行调试
-        if (debugCursor.moveToFirst()) {
-            do {
-                String id = debugCursor.getString(debugCursor.getColumnIndex("_id"));
-                String title = debugCursor.getString(debugCursor.getColumnIndex("title"));
-                String dateValue = debugCursor.getString(debugCursor.getColumnIndex("date"));
-                int stage = debugCursor.getInt(debugCursor.getColumnIndex("current_stage"));
-                String dateDay1 = debugCursor.getString(debugCursor.getColumnIndex("date_day_1"));
-                
-                Log.d(TAG, "数据库记录 - ID: " + id + ", 标题: " + title + 
-                      ", 日期: " + dateValue + ", 阶段: " + stage + 
-                      ", 第1天日期: " + dateDay1 + ", 当前日期: " + currentDate);
-            } while (debugCursor.moveToNext());
-        }
-        debugCursor.close();
-        
-        // 查询所有项目，然后进行过滤
-        try (Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_NAME, null)) {
-            // 安全获取字段索引
-            int idIndex = getColumnIndexSafe(cursor, "_id");
-            int titleIndex = getColumnIndexSafe(cursor, "title");
-            int stageIndex = getColumnIndexSafe(cursor, "current_stage");
-            int dateIndex = getColumnIndexSafe(cursor, "date");
-            int date1Index = getColumnIndexSafe(cursor, "date_day_1");
-            int date3Index = getColumnIndexSafe(cursor, "date_day_3");
-            int date5Index = getColumnIndexSafe(cursor, "date_day_5");
-            int date7Index = getColumnIndexSafe(cursor, "date_day_7");
-            int date15Index = getColumnIndexSafe(cursor, "date_day_15");
-            int date30Index = getColumnIndexSafe(cursor, "date_day_30");
-
-            Log.d(TAG, "查询结果数: " + cursor.getCount());
+        try {
+            db = getReadableDatabase();
             
-            while (cursor.moveToNext()) {
-                // 记录当前查询到的项目
-                int itemId = cursor.getInt(idIndex);
-                String itemTitle = cursor.getString(titleIndex);
-                int itemStage = cursor.getInt(stageIndex);
-                String itemDate = cursor.getString(dateIndex);
-                String itemNextDate = "";
-                
-                // 根据阶段获取下一次复习日期
-                switch (itemStage) {
-                    case 0:
-                        itemNextDate = cursor.getString(date1Index);
-                        break;
-                    case 1:
-                        itemNextDate = cursor.getString(date3Index);
-                        break;
-                    case 2:
-                        itemNextDate = cursor.getString(date5Index);
-                        break;
-                    case 3:
-                        itemNextDate = cursor.getString(date7Index);
-                        break;
-                    case 4:
-                        itemNextDate = cursor.getString(date15Index);
-                        break;
-                    case 5:
-                    case 6:
-                        itemNextDate = cursor.getString(date30Index);
-                        break;
-                }
-                
-                try {
-                    // 比较日期，判断是否过期或等于今天
-                    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-                    Date nextDate = dateFormat.parse(itemNextDate);
-                    Date today = dateFormat.parse(currentDate);
+            // 获取当前日期格式化为yyyy-MM-dd
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+            Calendar calendar = Calendar.getInstance();
+            String currentDate = sdf.format(calendar.getTime());
+            
+            Log.d(TAG, "查询项目 - 当前日期: " + currentDate);
+            
+            // 读取所有项目的SQL
+            String allItemsQuery = "SELECT * FROM " + TABLE_NAME;
+            Cursor debugCursor = db.rawQuery(allItemsQuery, null);
+            Log.d(TAG, "数据库中所有项目数量: " + debugCursor.getCount());
+            
+            // 输出数据库中的所有记录进行调试
+            if (debugCursor.moveToFirst()) {
+                do {
+                    String id = debugCursor.getString(debugCursor.getColumnIndex("_id"));
+                    String title = debugCursor.getString(debugCursor.getColumnIndex("title"));
+                    String dateValue = debugCursor.getString(debugCursor.getColumnIndex("date"));
+                    int stage = debugCursor.getInt(debugCursor.getColumnIndex("current_stage"));
+                    String dateDay1 = debugCursor.getString(debugCursor.getColumnIndex("date_day_1"));
                     
-                    // 如果日期小于等于今天（过期或今天），则显示
-                    if (nextDate != null && today != null && (nextDate.before(today) || nextDate.equals(today))) {
-                        Log.d(TAG, "项目匹配条件(今天或已过期) - ID=" + itemId + ", 标题=" + itemTitle + 
-                              ", 阶段=" + itemStage + ", 创建日期=" + itemDate + 
-                              ", 下次复习日期=" + itemNextDate + 
-                              ", 状态=" + (nextDate.before(today) ? "已过期" : "今天"));
-                    
-                        // 构建日期数组（包含基础日期）
-                        String[] dates = new String[]{
-                                cursor.getString(dateIndex),     // 基础日期
-                                cursor.getString(date1Index),    // +1
-                                cursor.getString(date3Index),    // +3
-                                cursor.getString(date5Index),    // +5
-                                cursor.getString(date7Index),    // +7
-                                cursor.getString(date15Index),   // +15
-                                cursor.getString(date30Index)    // +30
-                        };
-                        
-                        // 记录所有日期用于调试
-                        Log.d(TAG, "项目ID=" + itemId + " 的日期数组：" + 
-                                 "基础=" + dates[0] + ", " +
-                                 "1天=" + dates[1] + ", " +
-                                 "3天=" + dates[2] + ", " +
-                                 "5天=" + dates[3] + ", " +
-                                 "7天=" + dates[4] + ", " +
-                                 "15天=" + dates[5] + ", " +
-                                 "30天=" + dates[6]);
-        
-                        itemList.add(new Item(
-                                cursor.getInt(idIndex),
-                                cursor.getString(titleIndex),
-                                cursor.getInt(stageIndex),
-                                dates
-                        ));
-                    } else {
-                        Log.d(TAG, "项目不匹配条件(未来日期) - ID=" + itemId + ", 标题=" + itemTitle + 
-                                ", 阶段=" + itemStage + ", 下次复习日期=" + itemNextDate);
-                    }
-                } catch (Exception e) {
-                    Log.e(TAG, "日期比较出错: " + e.getMessage() + " - ID=" + itemId + ", 标题=" + itemTitle);
-                    // 出错时保守处理，添加项目以确保不会漏掉
-                    String[] dates = new String[]{
-                            cursor.getString(dateIndex),     // 基础日期
-                            cursor.getString(date1Index),    // +1
-                            cursor.getString(date3Index),    // +3
-                            cursor.getString(date5Index),    // +5
-                            cursor.getString(date7Index),    // +7
-                            cursor.getString(date15Index),   // +15
-                            cursor.getString(date30Index)    // +30
-                    };
-                    
-                    itemList.add(new Item(
-                            cursor.getInt(idIndex),
-                            cursor.getString(titleIndex),
-                            cursor.getInt(stageIndex),
-                            dates
-                    ));
-                }
+                    Log.d(TAG, "数据库记录 - ID: " + id + ", 标题: " + title + 
+                          ", 日期: " + dateValue + ", 阶段: " + stage + 
+                          ", 第1天日期: " + dateDay1 + ", 当前日期: " + currentDate);
+                } while (debugCursor.moveToNext());
             }
-        } catch (IllegalStateException e) {
-            Log.e(TAG, "Database schema mismatch: " + e.getMessage());
-        }
-        
-        Log.d(TAG, "queryAllItems 完成，返回 " + itemList.size() + " 个项目");
-
-        // 如果没有数据，添加调试信息
-        if (itemList.isEmpty()) {
-            Log.d(TAG, "今天没有复习任务！所有项目都已完成或未到复习时间");
+            debugCursor.close();
+            
+            // 查询所有项目，然后进行过滤
+            try (Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_NAME, null)) {
+                // 如果没有记录，直接返回空列表
+                if (cursor.getCount() == 0) {
+                    Log.d(TAG, "数据库中没有项目记录");
+                    return itemList;
+                }
+                
+                // 安全获取字段索引
+                int idIndex = getColumnIndexSafe(cursor, "_id");
+                int titleIndex = getColumnIndexSafe(cursor, "title");
+                int stageIndex = getColumnIndexSafe(cursor, "current_stage");
+                int dateIndex = getColumnIndexSafe(cursor, "date");
+                int date1Index = getColumnIndexSafe(cursor, "date_day_1");
+                int date3Index = getColumnIndexSafe(cursor, "date_day_3");
+                int date5Index = getColumnIndexSafe(cursor, "date_day_5");
+                int date7Index = getColumnIndexSafe(cursor, "date_day_7");
+                int date15Index = getColumnIndexSafe(cursor, "date_day_15");
+                int date30Index = getColumnIndexSafe(cursor, "date_day_30");
+    
+                Log.d(TAG, "查询结果数: " + cursor.getCount());
+                
+                while (cursor.moveToNext()) {
+                    try {
+                        // 记录当前查询到的项目
+                        int itemId = cursor.getInt(idIndex);
+                        String itemTitle = cursor.getString(titleIndex);
+                        int itemStage = cursor.getInt(stageIndex);
+                        String itemDate = cursor.getString(dateIndex);
+                        String itemNextDate = "";
+                        
+                        // 根据阶段获取下一次复习日期
+                        switch (itemStage) {
+                            case 0:
+                                itemNextDate = cursor.getString(date1Index);
+                                break;
+                            case 1:
+                                itemNextDate = cursor.getString(date3Index);
+                                break;
+                            case 2:
+                                itemNextDate = cursor.getString(date5Index);
+                                break;
+                            case 3:
+                                itemNextDate = cursor.getString(date7Index);
+                                break;
+                            case 4:
+                                itemNextDate = cursor.getString(date15Index);
+                                break;
+                            case 5:
+                            case 6:
+                                itemNextDate = cursor.getString(date30Index);
+                                break;
+                            default:
+                                Log.w(TAG, "未知阶段: " + itemStage + ", 使用基础日期");
+                                itemNextDate = itemDate; // 使用基础日期作为回退
+                        }
+                        
+                        try {
+                            // 比较日期，判断是否过期或等于今天
+                            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+                            Date nextDate = dateFormat.parse(itemNextDate);
+                            Date today = dateFormat.parse(currentDate);
+                            
+                            // 如果日期小于等于今天（过期或今天），则显示
+                            if (nextDate != null && today != null && (nextDate.before(today) || nextDate.equals(today))) {
+                                Log.d(TAG, "项目匹配条件(今天或已过期) - ID=" + itemId + ", 标题=" + itemTitle + 
+                                      ", 阶段=" + itemStage + ", 创建日期=" + itemDate + 
+                                      ", 下次复习日期=" + itemNextDate + 
+                                      ", 状态=" + (nextDate.before(today) ? "已过期" : "今天"));
+                            
+                                // 构建日期数组（包含基础日期）
+                                String[] dates = new String[]{
+                                        cursor.getString(dateIndex),     // 基础日期
+                                        cursor.getString(date1Index),    // +1
+                                        cursor.getString(date3Index),    // +3
+                                        cursor.getString(date5Index),    // +5
+                                        cursor.getString(date7Index),    // +7
+                                        cursor.getString(date15Index),   // +15
+                                        cursor.getString(date30Index)    // +30
+                                };
+                                
+                                // 记录所有日期用于调试
+                                Log.d(TAG, "项目ID=" + itemId + " 的日期数组：" + 
+                                         "基础=" + dates[0] + ", " +
+                                         "1天=" + dates[1] + ", " +
+                                         "3天=" + dates[2] + ", " +
+                                         "5天=" + dates[3] + ", " +
+                                         "7天=" + dates[4] + ", " +
+                                         "15天=" + dates[5] + ", " +
+                                         "30天=" + dates[6]);
+                
+                                itemList.add(new Item(
+                                        cursor.getInt(idIndex),
+                                        cursor.getString(titleIndex),
+                                        cursor.getInt(stageIndex),
+                                        dates
+                                ));
+                            } else {
+                                Log.d(TAG, "项目不匹配条件(未来日期) - ID=" + itemId + ", 标题=" + itemTitle + 
+                                        ", 阶段=" + itemStage + ", 下次复习日期=" + itemNextDate);
+                            }
+                        } catch (Exception e) {
+                            Log.e(TAG, "日期比较出错: " + e.getMessage() + " - ID=" + itemId + ", 标题=" + itemTitle);
+                            // 出错时保守处理，添加项目以确保不会漏掉
+                            String[] dates = new String[]{
+                                    cursor.getString(dateIndex),     // 基础日期
+                                    cursor.getString(date1Index),    // +1
+                                    cursor.getString(date3Index),    // +3
+                                    cursor.getString(date5Index),    // +5
+                                    cursor.getString(date7Index),    // +7
+                                    cursor.getString(date15Index),   // +15
+                                    cursor.getString(date30Index)    // +30
+                            };
+                            
+                            itemList.add(new Item(
+                                    cursor.getInt(idIndex),
+                                    cursor.getString(titleIndex),
+                                    cursor.getInt(stageIndex),
+                                    dates
+                            ));
+                        }
+                    } catch (Exception e) {
+                        Log.e(TAG, "处理单个项目时出错: " + e.getMessage());
+                    }
+                }
+            } catch (IllegalStateException e) {
+                Log.e(TAG, "数据库模式不匹配: " + e.getMessage());
+            } catch (Exception e) {
+                Log.e(TAG, "查询数据库时出错: " + e.getMessage(), e);
+            }
+            
+            Log.d(TAG, "queryAllItems 完成，返回 " + itemList.size() + " 个项目");
+    
+            // 如果没有数据，添加调试信息
+            if (itemList.isEmpty()) {
+                Log.d(TAG, "今天没有复习任务！所有项目都已完成或未到复习时间");
+            }
+            
+        } catch (Exception e) {
+            Log.e(TAG, "查询过程中发生错误: " + e.getMessage(), e);
+        } finally {
+            // 确保关闭数据库连接
+            if (db != null && db.isOpen()) {
+                db.close();
+            }
         }
         
         return itemList;
@@ -553,48 +580,79 @@ public class items extends SQLiteOpenHelper {
     // 新增方法：查询所有项目（不受日期限制）
     public List<Item> queryAllItemsNoDateFilter() {
         List<Item> itemList = new ArrayList<>();
-        SQLiteDatabase db = getReadableDatabase();
+        SQLiteDatabase db = null;
         
-        String query = "SELECT * FROM " + TABLE_NAME;
-        
-        try (Cursor cursor = db.rawQuery(query, null)) {
-            // 获取列索引
-            int idIndex = cursor.getColumnIndex("_id");
-            int titleIndex = cursor.getColumnIndex("title");
-            int stageIndex = cursor.getColumnIndex("current_stage");
-            int dateIndex = cursor.getColumnIndex("date");
-            int date1Index = cursor.getColumnIndex("date_day_1");
-            int date3Index = cursor.getColumnIndex("date_day_3");
-            int date5Index = cursor.getColumnIndex("date_day_5");
-            int date7Index = cursor.getColumnIndex("date_day_7");
-            int date15Index = cursor.getColumnIndex("date_day_15");
-            int date30Index = cursor.getColumnIndex("date_day_30");
+        try {
+            db = getReadableDatabase();
+            Log.d(TAG, "开始查询所有项目（不过滤日期）");
             
-            // 迭代结果集
-            while (cursor.moveToNext()) {
-                String[] dates = new String[7];
+            String query = "SELECT * FROM " + TABLE_NAME;
+            
+            try (Cursor cursor = db.rawQuery(query, null)) {
+                Log.d(TAG, "查询到 " + cursor.getCount() + " 个项目记录");
                 
-                // 安全地获取日期值
-                dates[0] = cursor.getString(dateIndex);
-                dates[1] = cursor.getString(date1Index); 
-                dates[2] = cursor.getString(date3Index);
-                dates[3] = cursor.getString(date5Index);
-                dates[4] = cursor.getString(date7Index);
-                dates[5] = cursor.getString(date15Index);
-                dates[6] = cursor.getString(date30Index);
+                // 如果没有记录，直接返回空列表
+                if (cursor.getCount() == 0) {
+                    return itemList;
+                }
                 
-                // 创建并添加Item对象
-                Item item = new Item(
-                    cursor.getInt(idIndex),
-                    cursor.getString(titleIndex),
-                    cursor.getInt(stageIndex),
-                    dates
-                );
-                itemList.add(item);
+                // 获取列索引
+                int idIndex = cursor.getColumnIndex("_id");
+                int titleIndex = cursor.getColumnIndex("title");
+                int stageIndex = cursor.getColumnIndex("current_stage");
+                int dateIndex = cursor.getColumnIndex("date");
+                int date1Index = cursor.getColumnIndex("date_day_1");
+                int date3Index = cursor.getColumnIndex("date_day_3");
+                int date5Index = cursor.getColumnIndex("date_day_5");
+                int date7Index = cursor.getColumnIndex("date_day_7");
+                int date15Index = cursor.getColumnIndex("date_day_15");
+                int date30Index = cursor.getColumnIndex("date_day_30");
+                
+                // 迭代结果集
+                while (cursor.moveToNext()) {
+                    try {
+                        int id = cursor.getInt(idIndex);
+                        String title = cursor.getString(titleIndex);
+                        int stage = cursor.getInt(stageIndex);
+                        
+                        String[] dates = new String[7];
+                        
+                        // 安全地获取日期值
+                        dates[0] = cursor.getString(dateIndex);
+                        dates[1] = cursor.getString(date1Index); 
+                        dates[2] = cursor.getString(date3Index);
+                        dates[3] = cursor.getString(date5Index);
+                        dates[4] = cursor.getString(date7Index);
+                        dates[5] = cursor.getString(date15Index);
+                        dates[6] = cursor.getString(date30Index);
+                        
+                        Log.d(TAG, "查询到项目 - ID=" + id + ", 标题=" + title + ", 阶段=" + stage);
+                        
+                        // 创建并添加Item对象
+                        Item item = new Item(
+                            cursor.getInt(idIndex),
+                            cursor.getString(titleIndex),
+                            cursor.getInt(stageIndex),
+                            dates
+                        );
+                        itemList.add(item);
+                    } catch (Exception e) {
+                        Log.e(TAG, "处理单个项目时出错: " + e.getMessage());
+                    }
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "查询所有项目时出错 (不过滤日期): " + e.getMessage(), e);
             }
+            
+            Log.d(TAG, "查询完成，返回 " + itemList.size() + " 个项目");
+            
         } catch (Exception e) {
-            Log.e(TAG, "查询所有项目时出错 (不过滤日期): " + e.getMessage());
-            e.printStackTrace();
+            Log.e(TAG, "查询过程中发生异常: " + e.getMessage(), e);
+        } finally {
+            // 确保关闭数据库连接
+            if (db != null && db.isOpen()) {
+                db.close();
+            }
         }
         
         return itemList;

@@ -83,11 +83,35 @@ public class MainActivity extends AppCompatActivity
     
     @Override
     public void refreshData() {
+        Log.d("MainActivity", "开始刷新数据...");
+        // 获取刷新前的项目数量
+        int oldItemCount = itemList != null ? itemList.size() : 0;
+        
+        // 重新从数据库查询所有项目
         itemList = dbHelper.queryAllItems();
-        adapter.updateList(itemList);
+        
+        // 更新适配器数据
+        if (adapter != null) {
+            adapter.updateList(itemList);
+        } else {
+            Log.w("MainActivity", "适配器为空，重新初始化");
+            adapter = new ItemAdapter(
+                this,       // Context
+                itemList,   // 数据列表
+                dbHelper,   // 数据库实例
+                this        // 实现RefreshCallback接口的Activity
+            );
+            if (listView != null) {
+                listView.setAdapter(adapter);
+            }
+        }
         
         // 检查列表是否为空，更新UI显示
         checkEmptyState();
+        
+        // 记录刷新结果
+        int newItemCount = itemList != null ? itemList.size() : 0;
+        Log.d("MainActivity", "数据刷新完成 - 刷新前: " + oldItemCount + " 项, 刷新后: " + newItemCount + " 项");
     }
     
     /**

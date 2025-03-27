@@ -182,46 +182,39 @@ public class ItemAdapter extends BaseAdapter {
     }
 
     private void handleCompleteClick(Item item) {
+        Log.d("ItemAdapter", "开始处理完成点击 - 项目ID=" + item.getId() + ", 标题=" + item.getTitle() + ", 当前阶段=" + item.getCurrentStage());
+        
         if (item.isFinalStage()) {
             // 完成项目
             dbHelper.completeItem(item.getId());
-            
-            // 从列表中移除该项目
-            int position = -1;
-            for (int i = 0; i < itemList.size(); i++) {
-                if (itemList.get(i).getId() == item.getId()) {
-                    position = i;
-                    break;
-                }
-            }
-            
-            if (position != -1) {
-                itemList.remove(position);
-                notifyDataSetChanged();
-                Log.d("ItemAdapter", "项目 ID=" + item.getId() + " 已完成并从列表中移除");
-            }
+            Log.d("ItemAdapter", "项目已完成(最终阶段) - ID=" + item.getId());
         } else {
             // 更新项目到下一阶段
             dbHelper.updateItemStage(item.getId());
-            
-            // 从列表中移除该项目（因为我们不希望它在今天再次显示）
-            int position = -1;
-            for (int i = 0; i < itemList.size(); i++) {
-                if (itemList.get(i).getId() == item.getId()) {
-                    position = i;
-                    break;
-                }
-            }
-            
-            if (position != -1) {
-                itemList.remove(position);
-                notifyDataSetChanged();
-                Log.d("ItemAdapter", "项目 ID=" + item.getId() + " 已更新到下一阶段并从列表中移除");
+            Log.d("ItemAdapter", "项目更新至下一阶段 - ID=" + item.getId() + ", 新阶段=" + (item.getCurrentStage() + 1));
+        }
+        
+        // 首先从当前列表中移除该项目
+        int position = -1;
+        for (int i = 0; i < itemList.size(); i++) {
+            if (itemList.get(i).getId() == item.getId()) {
+                position = i;
+                break;
             }
         }
         
+        if (position != -1) {
+            itemList.remove(position);
+            notifyDataSetChanged();
+            Log.d("ItemAdapter", "项目已从列表中移除 - ID=" + item.getId());
+        }
+        
         // 通知Activity刷新数据
+        // 这将重新查询数据库并更新主页显示
         callback.refreshData();
+        
+        // 记录刷新后的项目数量
+        Log.d("ItemAdapter", "刷新后列表中的项目数量: " + itemList.size());
     }
 
     /**
