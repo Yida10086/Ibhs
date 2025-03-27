@@ -135,17 +135,20 @@ public class ItemAdapter extends BaseAdapter {
         String baseDate = item.getBaseDate();
         String nextDate = item.getNextReminderDate();
         
+        // 增加详细日志记录
         Log.d("ItemAdapter", "格式化提醒文本 - ID:" + item.getId() + 
               ", 标题:" + item.getTitle() + 
               ", 基础日期:" + baseDate + 
-              ", 下次提醒:" + nextDate);
+              ", 下次提醒:" + nextDate + 
+              ", 日期数组:" + formatDatesArray(item.getDates()));
               
+        // 确保创建日期显示
         if (baseDate == null || baseDate.isEmpty()) {
-            // 如果基础日期为空，仅显示下次提醒
-            return String.format(Locale.getDefault(),
-                    "下次提醒：%s",
-                    nextDate
-            );
+            baseDate = "未设置";
+        }
+        
+        if (nextDate == null || nextDate.isEmpty()) {
+            nextDate = "未设置";
         }
         
         return String.format(Locale.getDefault(),
@@ -153,6 +156,21 @@ public class ItemAdapter extends BaseAdapter {
                 baseDate,
                 nextDate
         );
+    }
+
+    /**
+     * 安全地格式化日期数组为字符串
+     */
+    private String formatDatesArray(String[] dates) {
+        if (dates == null) return "null";
+        
+        StringBuilder sb = new StringBuilder("[");
+        for (int i = 0; i < dates.length; i++) {
+            if (i > 0) sb.append(",");
+            sb.append(dates[i] == null ? "null" : dates[i]);
+        }
+        sb.append("]");
+        return sb.toString();
     }
 
     private String getNextStageLabel(Item item) {

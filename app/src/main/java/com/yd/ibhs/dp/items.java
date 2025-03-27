@@ -90,6 +90,13 @@ public class items extends SQLiteOpenHelper {
     public void insertData(String title, String content, String date) {
         SQLiteDatabase db = this.getWritableDatabase();
 
+        // 检查日期是否为空，如果为空则使用当前日期
+        if (date == null || date.trim().isEmpty()) {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+            date = sdf.format(new java.util.Date());
+            Log.d(TAG, "日期为空，使用当前日期: " + date);
+        }
+
         // 规范化日期格式，确保使用yyyy-MM-dd格式
         String normalizedDate = date;
         try {
@@ -104,6 +111,10 @@ public class items extends SQLiteOpenHelper {
             Log.d(TAG, "输入日期: " + date + ", 规范化后: " + normalizedDate);
         } catch (Exception e) {
             Log.e(TAG, "日期格式转换失败: " + e.getMessage());
+            // 如果转换失败，使用当前日期
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+            normalizedDate = sdf.format(new java.util.Date());
+            Log.d(TAG, "转换失败，使用当前日期: " + normalizedDate);
         }
 
         // 计算日期

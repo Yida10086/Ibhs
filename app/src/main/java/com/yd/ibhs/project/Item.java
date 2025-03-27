@@ -43,12 +43,27 @@ public class Item {
             return "已完成";
         }
         
-        int nextStage = currentStage + 1;
-        if (nextStage < dates.length) {
-            return dates[nextStage];
-        } else {
-            return "完成阶段";
+        // 检查日期数组是否有效
+        if (dates == null || dates.length <= currentStage + 1) {
+            android.util.Log.e("Item", "无法获取下一个提醒日期，ID=" + id + 
+                    ", 标题=" + title + 
+                    ", 阶段=" + currentStage + 
+                    ", 日期数组=" + (dates != null ? "长度" + dates.length : "null"));
+            return "未设置";
         }
+        
+        int nextStage = currentStage + 1;
+        String nextDate = dates[nextStage];
+        
+        // 检查下一个日期是否为空
+        if (nextDate == null || nextDate.isEmpty()) {
+            android.util.Log.e("Item", "下一个提醒日期为空，ID=" + id + 
+                    ", 标题=" + title + 
+                    ", 下一阶段=" + nextStage);
+            return "未设置";
+        }
+        
+        return nextDate;
     }
 
     // 判断是否最终阶段
@@ -75,7 +90,13 @@ public class Item {
     public String getBaseDate() { 
         if (dates == null || dates.length == 0) {
             android.util.Log.e("Item", "日期数组为空，ID=" + id + ", 标题=" + title);
-            return "";
+            return "未设置";
+        }
+        
+        // 检查第一个日期是否为空
+        if (dates[0] == null || dates[0].isEmpty()) {
+            android.util.Log.e("Item", "基础日期为空，ID=" + id + ", 标题=" + title);
+            return "未设置";
         }
         
         android.util.Log.d("Item", "获取基础日期 - ID:" + id + 
