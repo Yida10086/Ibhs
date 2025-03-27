@@ -91,7 +91,7 @@ public class items extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
 
         // 检查日期是否为空，如果为空则使用当前日期
-        if (date == null || date.trim().isEmpty()) {
+        if (date == "" || date.trim().isEmpty()) {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
             date = sdf.format(new java.util.Date());
             Log.d(TAG, "日期为空，使用当前日期: " + date);
