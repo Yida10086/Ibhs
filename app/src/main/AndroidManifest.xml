@@ -14,12 +14,15 @@
         tools:targetApi="31">
         <activity
             android:name=".Activitys.ShowAllActivity"
+            android:launchMode="singleTop"
             android:exported="false" />
         <activity
             android:name=".Activitys.AddActivity"
+            android:launchMode="singleTop"
             android:exported="false" />
         <activity
             android:name=".MainActivity"
+            android:launchMode="singleTask"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
