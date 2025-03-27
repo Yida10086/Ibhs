@@ -87,31 +87,64 @@ public class MainActivity extends AppCompatActivity
         // 获取刷新前的项目数量
         int oldItemCount = itemList != null ? itemList.size() : 0;
         
-        // 重新从数据库查询所有项目
-        itemList = dbHelper.queryAllItems();
-        
-        // 更新适配器数据
-        if (adapter != null) {
-            adapter.updateList(itemList);
-        } else {
-            Log.w("MainActivity", "适配器为空，重新初始化");
-            adapter = new ItemAdapter(
-                this,       // Context
-                itemList,   // 数据列表
-                dbHelper,   // 数据库实例
-                this        // 实现RefreshCallback接口的Activity
-            );
-            if (listView != null) {
-                listView.setAdapter(adapter);
-            }
+        // 确保数据库连接可用
+        if (dbHelper == null) {
+            dbHelper = new items(this);
+            Log.d("MainActivity", "数据库连接已重新初始化");
         }
         
-        // 检查列表是否为空，更新UI显示
-        checkEmptyState();
-        
-        // 记录刷新结果
-        int newItemCount = itemList != null ? itemList.size() : 0;
-        Log.d("MainActivity", "数据刷新完成 - 刷新前: " + oldItemCount + " 项, 刷新后: " + newItemCount + " 项");
+        try {
+            // 重新从数据库查询所有项目
+            itemList = dbHelper.queryAllItems();
+            
+            // 更新适配器数据
+            if (adapter != null) {
+                adapter.updateList(itemList);
+            } else {
+                Log.w("MainActivity", "适配器为空，重新初始化");
+                adapter = new ItemAdapter(
+                    this,       // Context
+                    itemList,   // 数据列表
+                    dbHelper,   // 数据库实例
+                    this        // 实现RefreshCallback接口的Activity
+                );
+                if (listView != null) {
+                    listView.setAdapter(adapter);
+                }
+            }
+            
+            // 检查列表是否为空，更新UI显示
+            checkEmptyState();
+            
+            // 记录刷新结果
+            int newItemCount = itemList != null ? itemList.size() : 0;
+            Log.d("MainActivity", "数据刷新完成 - 刷新前: " + oldItemCount + " 项, 刷新后: " + newItemCount + " 项");
+        } catch (Exception e) {
+            Log.e("MainActivity", "刷新数据时出错: " + e.getMessage(), e);
+            
+            // 尝试修复数据库连接
+            try {
+                if (dbHelper != null) {
+                    dbHelper.close();
+                }
+                dbHelper = new items(this);
+                
+                // 再次尝试查询
+                itemList = dbHelper.queryAllItems();
+                if (adapter != null) {
+                    adapter.updateList(itemList);
+                }
+                
+                // 检查列表是否为空，更新UI显示
+                checkEmptyState();
+                
+                Log.d("MainActivity", "恢复数据库连接并重新查询成功");
+            } catch (Exception e2) {
+                Log.e("MainActivity", "重试刷新数据仍然失败: " + e2.getMessage(), e2);
+                // 显示错误提示
+                Toast.makeText(this, "加载数据失败，请重启应用", Toast.LENGTH_SHORT).show();
+            }
+        }
     }
     
     /**
@@ -155,6 +188,11 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onStart() {
         super.onStart();
+        
+        // 每次回到主页时重新查询数据库
+        Log.d("MainActivity", "onStart: 重新查询数据库...");
+        refreshData();
+        
         Button buttonBack = findViewById(R.id.b1);
         buttonBack.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -191,8 +229,35 @@ public class MainActivity extends AppCompatActivity
     protected void onResume() {
         super.onResume();
         
-        // 刷新数据和UI状态
+        // 每次恢复活动时重新查询数据库
+        Log.d("MainActivity", "onResume: 重新查询数据库...");
         refreshData();
+    }
+    
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+        
+        // 每次从其他界面返回时重新查询数据库
+        Log.d("MainActivity", "onRestart: 从其他界面返回，重新查询数据库...");
+        refreshData();
+    }
+    
+    @Override
+    protected void onStop() {
+        super.onStop();
+        Log.d("MainActivity", "onStop: 主页被暂停");
+    }
+    
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        
+        // 关闭数据库连接
+        if (dbHelper != null) {
+            dbHelper.close();
+            Log.d("MainActivity", "onDestroy: 关闭数据库连接");
+        }
     }
 
 }

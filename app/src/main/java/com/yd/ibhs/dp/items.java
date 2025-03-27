@@ -291,10 +291,14 @@ public class items extends SQLiteOpenHelper {
 
     // 在items类中添加以下方法
     public List<Item> queryAllItems() {
+        // 创建新的项目列表，确保每次查询都是从头开始
         List<Item> itemList = new ArrayList<>();
         SQLiteDatabase db = null;
         
         try {
+            Log.d(TAG, "开始全新查询所有项目...");
+            
+            // 获取新的数据库连接
             db = getReadableDatabase();
             
             // 获取当前日期格式化为yyyy-MM-dd
