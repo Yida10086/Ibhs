@@ -131,7 +131,7 @@ public class AddActivity extends AppCompatActivity {
                 String date = d.getText() != null ? d.getText().toString().trim() : "";
                 
                 // 如果日期为空，则使用当前日期
-                if (date.isEmpty()) {
+                if (date == "") {
                     SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
                     Date currentDate = new Date(System.currentTimeMillis());
                     date = formatter.format(currentDate);
