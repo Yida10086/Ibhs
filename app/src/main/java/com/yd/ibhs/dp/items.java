@@ -99,76 +99,108 @@ public class items extends SQLiteOpenHelper {
 
         // 规范化日期格式，确保使用yyyy-MM-dd格式
         String normalizedDate = date;
+        boolean useFallbackDate = false;
+        
         try {
+            // 尝试解析日期
             SimpleDateFormat inputSdf = new SimpleDateFormat("yyyy-M-d", Locale.getDefault());
+            inputSdf.setLenient(false); // 严格模式
             SimpleDateFormat outputSdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
             
             java.util.Date parsedDate = inputSdf.parse(date);
             if (parsedDate != null) {
                 normalizedDate = outputSdf.format(parsedDate);
+                Log.d(TAG, "输入日期: " + date + ", 规范化后: " + normalizedDate);
+            } else {
+                useFallbackDate = true;
             }
-            
-            Log.d(TAG, "输入日期: " + date + ", 规范化后: " + normalizedDate);
         } catch (Exception e) {
             Log.e(TAG, "日期格式转换失败: " + e.getMessage());
-            // 如果转换失败，使用当前日期
+            useFallbackDate = true;
+        }
+        
+        // 如果日期解析失败，使用当前日期
+        if (useFallbackDate) {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
             normalizedDate = sdf.format(new java.util.Date());
-            Log.d(TAG, "转换失败，使用当前日期: " + normalizedDate);
+            Log.d(TAG, "使用当前日期作为备用: " + normalizedDate);
         }
 
-        // 计算日期
+        // 计算阶段日期
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-        Calendar calendar = Calendar.getInstance();
+        Calendar baseCalendar = Calendar.getInstance();
         try {
-            calendar.setTime(sdf.parse(normalizedDate));
-        } catch (ParseException | java.text.ParseException e) {
-            e.printStackTrace();
+            baseCalendar.setTime(sdf.parse(normalizedDate));
+        } catch (Exception e) {
+            Log.e(TAG, "解析基础日期失败，使用当前日期: " + e.getMessage());
+            baseCalendar = Calendar.getInstance(); // 如果解析失败，使用当前日期
         }
         
         // 记录原始日期和计算用日期
         Log.d(TAG, "插入数据 - 标题: " + title + ", 内容: " + content + 
               ", 原始日期: " + date + ", 计算用日期: " + normalizedDate);
 
-        // 计算每个阶段日期（直接基于基础日期计算）
-        Calendar baseCalendar = Calendar.getInstance();
-        try {
-            baseCalendar.setTime(sdf.parse(normalizedDate));
-        } catch (ParseException | java.text.ParseException e) {
-            e.printStackTrace();
-        }
-        
         // 保存基础日期副本，用于计算各阶段日期
-        Calendar stageCalendar = (Calendar) baseCalendar.clone();
+        String date_plus_1, date_plus_3, date_plus_5, date_plus_7, date_plus_15, date_plus_30;
         
-        // 计算 date_plus_1（基础日期+1天）
-        stageCalendar.add(Calendar.DAY_OF_YEAR, 1);
-        String date_plus_1 = sdf.format(stageCalendar.getTime());
-        
-        // 重置为基础日期，计算 date_plus_3（基础日期+3天）
-        stageCalendar = (Calendar) baseCalendar.clone();
-        stageCalendar.add(Calendar.DAY_OF_YEAR, 3);
-        String date_plus_3 = sdf.format(stageCalendar.getTime());
-        
-        // 重置为基础日期，计算 date_plus_5（基础日期+5天）
-        stageCalendar = (Calendar) baseCalendar.clone();
-        stageCalendar.add(Calendar.DAY_OF_YEAR, 5);
-        String date_plus_5 = sdf.format(stageCalendar.getTime());
-        
-        // 重置为基础日期，计算 date_plus_7（基础日期+7天）
-        stageCalendar = (Calendar) baseCalendar.clone();
-        stageCalendar.add(Calendar.DAY_OF_YEAR, 7);
-        String date_plus_7 = sdf.format(stageCalendar.getTime());
-        
-        // 重置为基础日期，计算 date_plus_15（基础日期+15天）
-        stageCalendar = (Calendar) baseCalendar.clone();
-        stageCalendar.add(Calendar.DAY_OF_YEAR, 15);
-        String date_plus_15 = sdf.format(stageCalendar.getTime());
-        
-        // 重置为基础日期，计算 date_plus_30（基础日期+30天）
-        stageCalendar = (Calendar) baseCalendar.clone();
-        stageCalendar.add(Calendar.DAY_OF_YEAR, 30);
-        String date_plus_30 = sdf.format(stageCalendar.getTime());
+        try {
+            // 尝试计算所有阶段日期
+            // 计算 date_plus_1（基础日期+1天）
+            Calendar stageCalendar = (Calendar) baseCalendar.clone();
+            stageCalendar.add(Calendar.DAY_OF_YEAR, 1);
+            date_plus_1 = sdf.format(stageCalendar.getTime());
+            
+            // 计算 date_plus_3（基础日期+3天）
+            stageCalendar = (Calendar) baseCalendar.clone();
+            stageCalendar.add(Calendar.DAY_OF_YEAR, 3);
+            date_plus_3 = sdf.format(stageCalendar.getTime());
+            
+            // 计算 date_plus_5（基础日期+5天）
+            stageCalendar = (Calendar) baseCalendar.clone();
+            stageCalendar.add(Calendar.DAY_OF_YEAR, 5);
+            date_plus_5 = sdf.format(stageCalendar.getTime());
+            
+            // 计算 date_plus_7（基础日期+7天）
+            stageCalendar = (Calendar) baseCalendar.clone();
+            stageCalendar.add(Calendar.DAY_OF_YEAR, 7);
+            date_plus_7 = sdf.format(stageCalendar.getTime());
+            
+            // 计算 date_plus_15（基础日期+15天）
+            stageCalendar = (Calendar) baseCalendar.clone();
+            stageCalendar.add(Calendar.DAY_OF_YEAR, 15);
+            date_plus_15 = sdf.format(stageCalendar.getTime());
+            
+            // 计算 date_plus_30（基础日期+30天）
+            stageCalendar = (Calendar) baseCalendar.clone();
+            stageCalendar.add(Calendar.DAY_OF_YEAR, 30);
+            date_plus_30 = sdf.format(stageCalendar.getTime());
+        } catch (Exception e) {
+            Log.e(TAG, "计算阶段日期失败: " + e.getMessage());
+            // 如果计算失败，使用简单的占位符值
+            Calendar fallbackCalendar = Calendar.getInstance();
+            fallbackCalendar.add(Calendar.DAY_OF_YEAR, 1);
+            date_plus_1 = sdf.format(fallbackCalendar.getTime());
+            
+            fallbackCalendar = Calendar.getInstance();
+            fallbackCalendar.add(Calendar.DAY_OF_YEAR, 3);
+            date_plus_3 = sdf.format(fallbackCalendar.getTime());
+            
+            fallbackCalendar = Calendar.getInstance();
+            fallbackCalendar.add(Calendar.DAY_OF_YEAR, 5);
+            date_plus_5 = sdf.format(fallbackCalendar.getTime());
+            
+            fallbackCalendar = Calendar.getInstance();
+            fallbackCalendar.add(Calendar.DAY_OF_YEAR, 7);
+            date_plus_7 = sdf.format(fallbackCalendar.getTime());
+            
+            fallbackCalendar = Calendar.getInstance();
+            fallbackCalendar.add(Calendar.DAY_OF_YEAR, 15);
+            date_plus_15 = sdf.format(fallbackCalendar.getTime());
+            
+            fallbackCalendar = Calendar.getInstance();
+            fallbackCalendar.add(Calendar.DAY_OF_YEAR, 30);
+            date_plus_30 = sdf.format(fallbackCalendar.getTime());
+        }
 
         // 插入数据
         ContentValues values = new ContentValues();
@@ -183,8 +215,16 @@ public class items extends SQLiteOpenHelper {
         values.put("date_day_15", date_plus_15);
         values.put("date_day_30", date_plus_30);
 
-        db.insert(TABLE_NAME, null, values);
-        db.close(); // 关闭数据库连接
+        try {
+            db.insert(TABLE_NAME, null, values);
+            Log.d(TAG, "成功插入数据：" + title);
+        } catch (Exception e) {
+            Log.e(TAG, "插入数据失败: " + e.getMessage());
+        } finally {
+            if (db != null && db.isOpen()) {
+                db.close(); // 确保数据库连接关闭
+            }
+        }
     }
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {

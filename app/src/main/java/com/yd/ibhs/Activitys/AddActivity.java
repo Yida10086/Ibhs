@@ -141,12 +141,20 @@ public class AddActivity extends AppCompatActivity {
                     Log.d("AddActivity", "使用当前日期: " + date);
                 }
 
-                // 插入数据
-                dp.insertData(title, content, date);
-                Log.d("AddActivity", "添加项目 - 标题:" + title + ", 内容:" + content + ", 日期:" + date);
-                
-                // 返回上一页
-                finish();
+                try {
+                    // 插入数据
+                    dp.insertData(title, content, date);
+                    Log.d("AddActivity", "添加项目 - 标题:" + title + ", 内容:" + content + ", 日期:" + date);
+                    
+                    // 返回上一页
+                    finish();
+                } catch (Exception e) {
+                    Log.e("AddActivity", "添加项目失败: " + e.getMessage(), e);
+                    // 显示错误提示
+                    android.widget.Toast.makeText(AddActivity.this, 
+                        "添加失败，请检查日期格式", 
+                        android.widget.Toast.LENGTH_SHORT).show();
+                }
             }
         });
     }
