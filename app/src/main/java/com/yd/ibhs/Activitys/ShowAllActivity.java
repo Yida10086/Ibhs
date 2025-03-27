@@ -120,4 +120,12 @@ public class ShowAllActivity extends AppCompatActivity implements ItemAdapter.Re
             Toast.makeText(this, "刷新数据失败", Toast.LENGTH_SHORT).show();
         }
     }
+    
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (dbHelper != null) {
+            dbHelper.close();
+        }
+    }
 } 

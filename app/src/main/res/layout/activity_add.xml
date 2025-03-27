@@ -50,7 +50,6 @@
             android:hint="请输入标题"
             android:inputType="text"
             android:maxLength="20"
-            android:textColor="@color/black"
             android:textSize="17sp" />
 
         <EditText
@@ -62,7 +61,6 @@
             android:inputType="textMultiLine"
             android:maxLength="100"
             android:minLines="3"
-            android:textColor="@color/black"
             android:textSize="17sp" />
 
         <TextView

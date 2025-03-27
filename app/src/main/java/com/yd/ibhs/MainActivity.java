@@ -135,7 +135,9 @@ public class MainActivity extends AppCompatActivity
         buttonBack.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startActivity(new Intent(MainActivity.this, AddActivity.class));
+                Intent intent = new Intent(MainActivity.this, AddActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                startActivity(intent);
             }
         });
         DrawerLayout drawerLayout = findViewById(R.id.drawerLayout);
@@ -150,7 +152,9 @@ public class MainActivity extends AppCompatActivity
         Button showAllButton = findViewById(R.id.setmain);
         showAllButton.setOnClickListener(v -> {
             try {
-                startActivity(new Intent(MainActivity.this, ShowAllActivity.class));
+                Intent intent = new Intent(MainActivity.this, ShowAllActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                startActivity(intent);
                 drawerLayout.closeDrawer(GravityCompat.START);  // 关闭侧边栏
             } catch (Exception e) {
                 Log.e("MainActivity", "跳转到ShowAllActivity失败: " + e.getMessage());

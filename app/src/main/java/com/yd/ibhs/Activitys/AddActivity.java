@@ -31,6 +31,8 @@ public class AddActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_add);
+        // 初始化数据库操作对象
+        dp = new items(this);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
@@ -45,7 +47,16 @@ public class AddActivity extends AppCompatActivity {
         buttonBack.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startActivity(new Intent(AddActivity.this, MainActivity.class));
+                try {
+                    finish();
+                } catch (Exception e) {
+                    Log.e("AddActivity", "返回时发生错误: " + e.getMessage());
+                    e.printStackTrace();
+                    // 如果finish失败，尝试使用其他方式返回
+                    Intent intent = new Intent(AddActivity.this, MainActivity.class);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                    startActivity(intent);
+                }
             }
         });
         Button btdate = findViewById(R.id.select_date);
@@ -93,7 +104,6 @@ public class AddActivity extends AppCompatActivity {
         sbumitBt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                dp = new items(AddActivity.this);
                 TextView t = findViewById(R.id.texttille);
                 String title = t.getText() != null ? t.getText().toString() : "";
                 TextView c = findViewById(R.id.textcontent);
@@ -103,7 +113,7 @@ public class AddActivity extends AppCompatActivity {
 
                 dp.insertData(title,content,date);
                 Log.d("Debug",title+content+date);
-                startActivity(new Intent(AddActivity.this, MainActivity.class));
+                finish();
             }
         });
     }
@@ -111,6 +121,8 @@ public class AddActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        dp.close();
+        if (dp != null) {
+            dp.close();
+        }
     }
 }
