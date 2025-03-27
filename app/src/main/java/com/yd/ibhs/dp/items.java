@@ -331,15 +331,53 @@ public class items extends SQLiteOpenHelper {
                       "WHEN 4 THEN date_day_15 " + // 第4阶段：等待第15天复习日期
                       "WHEN 5 THEN date_day_30 " + // 第5阶段：等待第30天复习日期
                       "WHEN 6 THEN date_day_30 " + // 第6阶段：最后一次复习
-                      "END) = ? AND date != ?"; // 确保不显示创建日期是今天的项目
+                      "END) = ?";  // 精确匹配今天日期，确保只有今天需要复习的项目才显示
 
         String[] selectionArgs = new String[]{
-            currentDate, currentDate
+            currentDate
         };
         
         // 添加调试日志
         Log.d(TAG, "SQL 查询: " + query);
         Log.d(TAG, "查询参数: currentDate=" + currentDate);
+        
+        // 增加日期比较日志信息
+        try {
+            Cursor compareDebugCursor = db.rawQuery("SELECT _id, title, current_stage, " +
+                    "date_day_1, date_day_3, date_day_5, date_day_7, date_day_15, date_day_30 " +
+                    "FROM " + TABLE_NAME, null);
+            if (compareDebugCursor.moveToFirst()) {
+                do {
+                    int id = compareDebugCursor.getInt(compareDebugCursor.getColumnIndex("_id"));
+                    String title = compareDebugCursor.getString(compareDebugCursor.getColumnIndex("title"));
+                    int stage = compareDebugCursor.getInt(compareDebugCursor.getColumnIndex("current_stage"));
+                    String targetDate = "";
+                    
+                    // 根据阶段获取比较日期
+                    switch (stage) {
+                        case 0: targetDate = compareDebugCursor.getString(compareDebugCursor.getColumnIndex("date_day_1")); break;
+                        case 1: targetDate = compareDebugCursor.getString(compareDebugCursor.getColumnIndex("date_day_3")); break;
+                        case 2: targetDate = compareDebugCursor.getString(compareDebugCursor.getColumnIndex("date_day_5")); break;
+                        case 3: targetDate = compareDebugCursor.getString(compareDebugCursor.getColumnIndex("date_day_7")); break;
+                        case 4: targetDate = compareDebugCursor.getString(compareDebugCursor.getColumnIndex("date_day_15")); break;
+                        case 5:
+                        case 6: targetDate = compareDebugCursor.getString(compareDebugCursor.getColumnIndex("date_day_30")); break;
+                    }
+                    
+                    // 日期比较结果
+                    boolean matches = currentDate.equals(targetDate);
+                    Log.d(TAG, "日期比较: ID=" + id + ", 标题=" + title + 
+                            ", 阶段=" + stage + 
+                            ", 目标日期=" + targetDate + 
+                            ", 当前日期=" + currentDate + 
+                            ", 是否匹配=" + matches + 
+                            " (匹配意味着应该显示在主页)");
+                } while (compareDebugCursor.moveToNext());
+            }
+            compareDebugCursor.close();
+        } catch (Exception e) {
+            Log.e(TAG, "日期比较调试失败: " + e.getMessage());
+        }
         
         try (Cursor cursor = db.rawQuery(query, selectionArgs)) {
             // 安全获取字段索引
