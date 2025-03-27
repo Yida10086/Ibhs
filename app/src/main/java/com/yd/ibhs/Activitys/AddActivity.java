@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
@@ -33,6 +34,14 @@ public class AddActivity extends AppCompatActivity {
         setContentView(R.layout.activity_add);
         // 初始化数据库操作对象
         dp = new items(this);
+        
+        // 设置默认日期为当前日期
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+        Date currentDate = new Date(System.currentTimeMillis());
+        String defaultDate = formatter.format(currentDate);
+        TextView dateText = findViewById(R.id.datetext);
+        dateText.setText(defaultDate);
+        
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
@@ -104,15 +113,36 @@ public class AddActivity extends AppCompatActivity {
         sbumitBt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                TextView t = findViewById(R.id.texttille);
-                String title = t.getText() != null ? t.getText().toString() : "";
-                TextView c = findViewById(R.id.textcontent);
-                String content = c.getText() != null ? c.getText().toString() : "";
+                EditText t = findViewById(R.id.texttille);
+                String title = t.getText() != null ? t.getText().toString().trim() : "";
+                
+                // 检查标题是否为空
+                if (title.isEmpty()) {
+                    // 显示错误提示
+                    t.setError("标题不能为空");
+                    return; // 终止后续操作
+                }
+                
+                EditText c = findViewById(R.id.textcontent);
+                String content = c.getText() != null ? c.getText().toString().trim() : "";
+                // 内容可以为空，所以不需要检查
+                
                 TextView d = findViewById(R.id.datetext);
-                String date = d.getText() != null ? d.getText().toString() : "";
+                String date = d.getText() != null ? d.getText().toString().trim() : "";
+                
+                // 如果日期为空，则使用当前日期
+                if (date.isEmpty()) {
+                    SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+                    Date currentDate = new Date(System.currentTimeMillis());
+                    date = formatter.format(currentDate);
+                    Log.d("AddActivity", "使用当前日期: " + date);
+                }
 
-                dp.insertData(title,content,date);
-                Log.d("Debug",title+content+date);
+                // 插入数据
+                dp.insertData(title, content, date);
+                Log.d("AddActivity", "添加项目 - 标题:" + title + ", 内容:" + content + ", 日期:" + date);
+                
+                // 返回上一页
                 finish();
             }
         });

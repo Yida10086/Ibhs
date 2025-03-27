@@ -47,7 +47,7 @@
             android:id="@+id/texttille"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="请输入标题"
+            android:hint="请输入标题 (必填)"
             android:inputType="text"
             android:maxLength="20"
             android:textSize="17sp" />
@@ -57,7 +57,7 @@
             android:layout_width="match_parent"
             android:layout_height="52dp"
             android:gravity="top|start"
-            android:hint="请输入内容"
+            android:hint="请输入内容 (可选)"
             android:inputType="textMultiLine"
             android:maxLength="100"
             android:minLines="3"

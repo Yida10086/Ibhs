@@ -164,6 +164,7 @@ public class items extends SQLiteOpenHelper {
         values.put("title", title);
         values.put("content", content);
         values.put("date", normalizedDate); // 使用规范化后的日期
+        values.put("current_stage", 0); // 确保设置初始阶段为0
         values.put("date_day_1", date_plus_1);
         values.put("date_day_3", date_plus_3);
         values.put("date_day_5", date_plus_5);
@@ -260,48 +261,34 @@ public class items extends SQLiteOpenHelper {
                 String title = debugCursor.getString(debugCursor.getColumnIndex("title"));
                 String dateValue = debugCursor.getString(debugCursor.getColumnIndex("date"));
                 int stage = debugCursor.getInt(debugCursor.getColumnIndex("current_stage"));
+                String dateDay1 = debugCursor.getString(debugCursor.getColumnIndex("date_day_1"));
                 
                 Log.d(TAG, "数据库记录 - ID: " + id + ", 标题: " + title + 
-                      ", 日期: " + dateValue + ", 阶段: " + stage);
+                      ", 日期: " + dateValue + ", 阶段: " + stage + 
+                      ", 第1天日期: " + dateDay1 + ", 当前日期: " + currentDate);
             } while (debugCursor.moveToNext());
         }
         debugCursor.close();
         
-        // 创建动态查询条件
-        StringBuilder queryBuilder = new StringBuilder();
-        queryBuilder.append("SELECT * FROM ").append(TABLE_NAME).append(" WHERE ");
-        
-        // 第0阶段（初始阶段）- 只显示创建日期在当前日期之前的项目（即不显示创建当天的项目）
-        queryBuilder.append("(current_stage = 0 AND date < ?) ");
-        
-        // 第1-6阶段 - 通过对比复习日期确定当天需要复习的项目
-        // 第1阶段: 当前日期等于 (基础日期+1天) 的项目
-        queryBuilder.append("OR (current_stage = 1 AND date_day_1 = ?) ");
-        // 第2阶段: 当前日期等于 (基础日期+3天) 的项目
-        queryBuilder.append("OR (current_stage = 2 AND date_day_3 = ?) ");
-        // 第3阶段: 当前日期等于 (基础日期+5天) 的项目
-        queryBuilder.append("OR (current_stage = 3 AND date_day_5 = ?) ");
-        // 第4阶段: 当前日期等于 (基础日期+7天) 的项目
-        queryBuilder.append("OR (current_stage = 4 AND date_day_7 = ?) ");
-        // 第5阶段: 当前日期等于 (基础日期+15天) 的项目
-        queryBuilder.append("OR (current_stage = 5 AND date_day_15 = ?) ");
-        // 第6阶段: 当前日期等于 (基础日期+30天) 的项目
-        queryBuilder.append("OR (current_stage = 6 AND date_day_30 = ?)");
-        
-        // 按当前阶段和基础日期排序
-        queryBuilder.append(" ORDER BY current_stage, date ASC");
-        
-        String query = queryBuilder.toString();
-        
-        // 准备查询参数，所有参数都是当前日期
-        String[] selectionArgs = new String[7];
-        for (int i = 0; i < 7; i++) {
-            selectionArgs[i] = currentDate;
-        }
+        // 创建查询条件，明确排除当前日期等于创建日期的项目
+        String query = "SELECT * FROM " + TABLE_NAME + " WHERE " +
+                      "(CASE current_stage " +
+                      "WHEN 0 THEN date_day_1 " +  // 第0阶段：等待第1天复习日期
+                      "WHEN 1 THEN date_day_3 " +  // 第1阶段：等待第3天复习日期
+                      "WHEN 2 THEN date_day_5 " +  // 第2阶段：等待第5天复习日期
+                      "WHEN 3 THEN date_day_7 " +  // 第3阶段：等待第7天复习日期
+                      "WHEN 4 THEN date_day_15 " + // 第4阶段：等待第15天复习日期
+                      "WHEN 5 THEN date_day_30 " + // 第5阶段：等待第30天复习日期
+                      "WHEN 6 THEN date_day_30 " + // 第6阶段：最后一次复习
+                      "END) = ? AND date != ?"; // 确保不显示创建日期是今天的项目
+
+        String[] selectionArgs = new String[]{
+            currentDate, currentDate
+        };
         
         // 添加调试日志
         Log.d(TAG, "SQL 查询: " + query);
-        Log.d(TAG, "查询参数: " + currentDate);
+        Log.d(TAG, "查询参数: currentDate=" + currentDate);
         
         try (Cursor cursor = db.rawQuery(query, selectionArgs)) {
             // 安全获取字段索引
@@ -324,9 +311,34 @@ public class items extends SQLiteOpenHelper {
                 String itemTitle = cursor.getString(titleIndex);
                 int itemStage = cursor.getInt(stageIndex);
                 String itemDate = cursor.getString(dateIndex);
+                String itemNextDate = "";
+                
+                // 根据阶段获取下一次复习日期
+                switch (itemStage) {
+                    case 0:
+                        itemNextDate = cursor.getString(date1Index);
+                        break;
+                    case 1:
+                        itemNextDate = cursor.getString(date3Index);
+                        break;
+                    case 2:
+                        itemNextDate = cursor.getString(date5Index);
+                        break;
+                    case 3:
+                        itemNextDate = cursor.getString(date7Index);
+                        break;
+                    case 4:
+                        itemNextDate = cursor.getString(date15Index);
+                        break;
+                    case 5:
+                    case 6:
+                        itemNextDate = cursor.getString(date30Index);
+                        break;
+                }
                 
                 Log.d(TAG, "查询到项目: ID=" + itemId + ", 标题=" + itemTitle + 
-                        ", 阶段=" + itemStage + ", 创建日期=" + itemDate);
+                        ", 阶段=" + itemStage + ", 创建日期=" + itemDate + 
+                        ", 下次复习日期=" + itemNextDate);
                 
                 // 构建日期数组（包含基础日期）
                 String[] dates = new String[]{
