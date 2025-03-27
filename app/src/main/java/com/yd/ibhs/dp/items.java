@@ -13,6 +13,7 @@ import android.util.Log;
 import com.yd.ibhs.project.Item;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
@@ -368,13 +369,53 @@ public class items extends SQLiteOpenHelper {
                         break;
                 }
                 
-                // 只添加精确匹配今天日期的项目 - 不包括超时项目
-                if (currentDate.equals(itemNextDate)) {
-                    Log.d(TAG, "项目匹配今天日期 - ID=" + itemId + ", 标题=" + itemTitle + 
-                            ", 阶段=" + itemStage + ", 创建日期=" + itemDate + 
-                            ", 下次复习日期=" + itemNextDate);
-                
-                    // 构建日期数组（包含基础日期）
+                try {
+                    // 比较日期，判断是否过期或等于今天
+                    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+                    Date nextDate = dateFormat.parse(itemNextDate);
+                    Date today = dateFormat.parse(currentDate);
+                    
+                    // 如果日期小于等于今天（过期或今天），则显示
+                    if (nextDate != null && today != null && (nextDate.before(today) || nextDate.equals(today))) {
+                        Log.d(TAG, "项目匹配条件(今天或已过期) - ID=" + itemId + ", 标题=" + itemTitle + 
+                              ", 阶段=" + itemStage + ", 创建日期=" + itemDate + 
+                              ", 下次复习日期=" + itemNextDate + 
+                              ", 状态=" + (nextDate.before(today) ? "已过期" : "今天"));
+                    
+                        // 构建日期数组（包含基础日期）
+                        String[] dates = new String[]{
+                                cursor.getString(dateIndex),     // 基础日期
+                                cursor.getString(date1Index),    // +1
+                                cursor.getString(date3Index),    // +3
+                                cursor.getString(date5Index),    // +5
+                                cursor.getString(date7Index),    // +7
+                                cursor.getString(date15Index),   // +15
+                                cursor.getString(date30Index)    // +30
+                        };
+                        
+                        // 记录所有日期用于调试
+                        Log.d(TAG, "项目ID=" + itemId + " 的日期数组：" + 
+                                 "基础=" + dates[0] + ", " +
+                                 "1天=" + dates[1] + ", " +
+                                 "3天=" + dates[2] + ", " +
+                                 "5天=" + dates[3] + ", " +
+                                 "7天=" + dates[4] + ", " +
+                                 "15天=" + dates[5] + ", " +
+                                 "30天=" + dates[6]);
+        
+                        itemList.add(new Item(
+                                cursor.getInt(idIndex),
+                                cursor.getString(titleIndex),
+                                cursor.getInt(stageIndex),
+                                dates
+                        ));
+                    } else {
+                        Log.d(TAG, "项目不匹配条件(未来日期) - ID=" + itemId + ", 标题=" + itemTitle + 
+                                ", 阶段=" + itemStage + ", 下次复习日期=" + itemNextDate);
+                    }
+                } catch (Exception e) {
+                    Log.e(TAG, "日期比较出错: " + e.getMessage() + " - ID=" + itemId + ", 标题=" + itemTitle);
+                    // 出错时保守处理，添加项目以确保不会漏掉
                     String[] dates = new String[]{
                             cursor.getString(dateIndex),     // 基础日期
                             cursor.getString(date1Index),    // +1
@@ -385,25 +426,12 @@ public class items extends SQLiteOpenHelper {
                             cursor.getString(date30Index)    // +30
                     };
                     
-                    // 记录所有日期用于调试
-                    Log.d(TAG, "项目ID=" + itemId + " 的日期数组：" + 
-                             "基础=" + dates[0] + ", " +
-                             "1天=" + dates[1] + ", " +
-                             "3天=" + dates[2] + ", " +
-                             "5天=" + dates[3] + ", " +
-                             "7天=" + dates[4] + ", " +
-                             "15天=" + dates[5] + ", " +
-                             "30天=" + dates[6]);
-    
                     itemList.add(new Item(
                             cursor.getInt(idIndex),
                             cursor.getString(titleIndex),
                             cursor.getInt(stageIndex),
                             dates
                     ));
-                } else {
-                    Log.d(TAG, "项目不匹配今天日期 (跳过) - ID=" + itemId + ", 标题=" + itemTitle + 
-                            ", 阶段=" + itemStage + ", 下次复习日期=" + itemNextDate);
                 }
             }
         } catch (IllegalStateException e) {
