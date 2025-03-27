@@ -71,5 +71,17 @@ public class Item {
     public String getTitle() { return title; }
     public int getCurrentStage() { return currentStage; }
     public String[] getDates() { return dates; }
-    public String getBaseDate() { return dates[0]; } // 第一个日期为基准日期
+    
+    public String getBaseDate() { 
+        if (dates == null || dates.length == 0) {
+            android.util.Log.e("Item", "日期数组为空，ID=" + id + ", 标题=" + title);
+            return "";
+        }
+        
+        android.util.Log.d("Item", "获取基础日期 - ID:" + id + 
+                ", 标题:" + title + 
+                ", 首个日期:" + dates[0]);
+        
+        return dates[0]; // 第一个日期为基准日期
+    }
 }

@@ -350,6 +350,16 @@ public class items extends SQLiteOpenHelper {
                         cursor.getString(date15Index),   // +15
                         cursor.getString(date30Index)    // +30
                 };
+                
+                // 记录所有日期用于调试
+                Log.d(TAG, "项目ID=" + itemId + " 的日期数组：" + 
+                         "基础=" + dates[0] + ", " +
+                         "1天=" + dates[1] + ", " +
+                         "3天=" + dates[2] + ", " +
+                         "5天=" + dates[3] + ", " +
+                         "7天=" + dates[4] + ", " +
+                         "15天=" + dates[5] + ", " +
+                         "30天=" + dates[6]);
 
                 itemList.add(new Item(
                         cursor.getInt(idIndex),

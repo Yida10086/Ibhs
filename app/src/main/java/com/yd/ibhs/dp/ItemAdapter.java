@@ -132,10 +132,26 @@ public class ItemAdapter extends BaseAdapter {
     }
 
     private String formatReminderText(Item item) {
+        String baseDate = item.getBaseDate();
+        String nextDate = item.getNextReminderDate();
+        
+        Log.d("ItemAdapter", "格式化提醒文本 - ID:" + item.getId() + 
+              ", 标题:" + item.getTitle() + 
+              ", 基础日期:" + baseDate + 
+              ", 下次提醒:" + nextDate);
+              
+        if (baseDate == null || baseDate.isEmpty()) {
+            // 如果基础日期为空，仅显示下次提醒
+            return String.format(Locale.getDefault(),
+                    "下次提醒：%s",
+                    nextDate
+            );
+        }
+        
         return String.format(Locale.getDefault(),
                 "创建日期：%s\n下次提醒：%s",
-                item.getBaseDate(),
-                item.getNextReminderDate()
+                baseDate,
+                nextDate
         );
     }
 
