@@ -19,7 +19,7 @@ import java.util.Locale;
 public class items extends SQLiteOpenHelper {
     private static final String TAG = "items";
     private static final String DB_NAME = "items.db"; // 数据库的名称
-    private static final int DB_VERSION = 7; // 数据库的版本号已更新
+    private static final int DB_VERSION = 8; // 数据库的版本号已更新
     private static items mHelper = null; // 数据库帮助器的实例
     private SQLiteDatabase mDB = null; // 数据库的实例
     public static final String TABLE_NAME = "items"; // 表的名称
